@@ -60,31 +60,31 @@ d3.csv("assets/data/data.csv")
 
     // Step 5: Create the scales for the chart
     // =================================
-    var xLinearScalePoverty = d3.scaleLinear()
+    var xLinearScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.poverty) * 0.9,
                d3.max(data, d => d.poverty) * 1.1])
       .range([0, width]);
 
-    var yLinearScaleObesity = d3.scaleLinear()
+    var yLinearScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.obesity) * 0.9,
                d3.max(data, d => d.obesity) * 1.1])
       .range([height, 0]);
 
     // Step 6: Create axis functions
     // =================================
-    var bottomAxisPoverty = d3.axisBottom(xLinearScalePoverty);
-    var leftAxisObesity = d3.axisLeft(yLinearScaleObesity);
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
 
     // Step 7: Append axes to the chart
     // =================================
     svgGroup.append("g")
       .attr("id", "xAxis")
       .attr("transform", `translate(0, ${height})`)
-      .call(bottomAxisPoverty);
-    
+      .call(bottomAxis);
+
     svgGroup.append("g")
       .attr("id", "yAxis")
-      .call(leftAxisObesity);
+      .call(leftAxis);
 
     // Step 8: Initialize tooltip
     // =================================
@@ -92,7 +92,9 @@ d3.csv("assets/data/data.csv")
       .attr("class", "d3-tip")
       .offset([-8, 0])
       .html(d => {
-        return `${d.state}<br>Poverty: ${d.poverty}%<br>Obesity: ${d.obesity}%`
+        xValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d.poverty) + '%';
+        yValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d.obesity) + '%';
+        return `${d.state}<br>Poverty: ${xValue}<br>Obesity: ${yValue}`;
       });
 
     // Step 9: Create tooltip in the chart
@@ -109,8 +111,8 @@ d3.csv("assets/data/data.csv")
       .data(data)
     .enter().append("g")
       .attr("transform", d => {
-        return "translate(" + xLinearScalePoverty(d.poverty) + ", " + 
-                              yLinearScaleObesity(d.obesity) + ")";
+        return "translate(" + xLinearScale(d.poverty) + ", " + 
+                              yLinearScale(d.obesity) + ")";
       })
       .on("mouseover", toolTip.show)
       .on("mouseout", toolTip.hide);
@@ -123,8 +125,9 @@ d3.csv("assets/data/data.csv")
       .text(d => d.abbr)
       .classed("stateText", true);
 
-    // Step 11: Create axes labels
+    // Step 11: Create Y axes labels and make the chart interactive
     // =================================
+
     yLabels = [{"field": "obesity",
                 "label": "Obese (%)"},
                {"field": "smokes",
@@ -149,6 +152,7 @@ d3.csv("assets/data/data.csv")
         return "axisText inactive";
       })
       .text(d => d.label)
+
       .on("click", function() {
         var newYSelection = d3.select(this).data()[0].field;
 
@@ -157,8 +161,6 @@ d3.csv("assets/data/data.csv")
         if (newYSelection === activeYSelection) {
           return;
         }
-
-        // user clicked on a new selection - time to work!
 
         // mute all y-labels, highlight clicked selection
         svgGroup.selectAll("g#yLabels").selectAll("text")
@@ -185,22 +187,23 @@ d3.csv("assets/data/data.csv")
                    d3.max(data, d => d[currentXSelection]) * 1.1])
           .range([0, width]);
 
-        // create new tooltup
+        // create new tooltip
         var toolTip = d3.tip()
           .attr("class", "d3-tip")
           .offset([-8, 0])
           .html(d => {
-            xValue = d[currentXSelection];
+            xValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d[currentXSelection]);
             if (currentXSelection === 'poverty') {
               xValue += "%";
             }
             else if (currentXSelection === 'income') {
-              xValue = Intl.NumberFormat().format(xValue);
+              xValue = Intl.NumberFormat().format(d[currentXSelection]);
             }
-            return `${d.state}<br>${currentXSelection}: ${xValue}<br>${newYSelection}: ${d[newYSelection]}%`
+            yValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d[newYSelection]);
+            return `${d.state}<br>${currentXSelection}: ${xValue}<br>${newYSelection}: ${yValue}%`
           });
         svgGroup.call(toolTip);
-        
+
         // transition bubbles to new y coordinates
         svgGroup.select("#bubbles").selectAll("g")
           .data(data)
@@ -213,6 +216,9 @@ d3.csv("assets/data/data.csv")
             });
 
       });
+
+    // Step 12: Create X axes labels and make the chart interactive
+    // =================================
 
     xLabels = [{"field": "poverty",
                 "label": "In Poverty (%)"},
@@ -271,19 +277,20 @@ d3.csv("assets/data/data.csv")
                    d3.max(data, d => d[currentYSelection]) * 1.1])
           .range([height, 0]);
 
-        // create new tooltup
+        // create new tooltip
         var toolTip = d3.tip()
           .attr("class", "d3-tip")
           .offset([-8, 0])
           .html(d => {
-            xValue = d[newXSelection];
+            xValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d[newXSelection]);
             if (newXSelection === 'poverty') {
               xValue += "%";
             }
             else if (newXSelection === 'income') {
-              xValue = Intl.NumberFormat().format(xValue);
+              xValue = Intl.NumberFormat().format(d[newXSelection]);
             }
-            return `${d.state}<br>${newXSelection}: ${xValue}<br>${currentYSelection}: ${d[currentYSelection]}%`
+            yValue = Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(d[currentYSelection]);
+            return `${d.state}<br>${newXSelection}: ${xValue}<br>${currentYSelection}: ${yValue}%`
           });
         svgGroup.call(toolTip);
 
@@ -297,8 +304,6 @@ d3.csv("assets/data/data.csv")
               return "translate(" + xLinearScale(d[newXSelection]) + ", " +
                                     yLinearScale(d[currentYSelection]) + ")";
             });
-
-
 
       });
 
